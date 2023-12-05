@@ -13,11 +13,10 @@ layers_x = patientData.NiereMaximalBeiKoronalerSchicht_x_;
 layers_y_min = patientData.gew_hlteAxialeSchichten_z_;
 layers_y_max = patientData.Var11;
 % Ich habe die Datensätze limitiert, damit das Skript schneller läuft
-amountPatients = 3; %length(patientIDs);
+amountPatients = 1; %length(patientIDs);
 
 cases = cell(1,amountPatients);
 masks = cell(1,amountPatients);
-images = cell(1,amountPatients);
 
 for i = 1:amountPatients
     id = patientIDs(i,1);
@@ -37,12 +36,19 @@ for i = 1:amountPatients
 
     cases{i} = double(niftiread(finalPathImages));
     masks{i} = double(niftiread(finalPathMasks));
-    
-    % plots the first layer of each patient data
-    Function_show2DPlot(i, layer_x, cases, layer_y_min, layer_y_max)
-    % plots the segmented images
-    %display_segmented_images(cases{i}(:,:,layer_x), masks{i}(:,:,layer_x))
+   
+    %Function_show2DPlot(i, layer_x, cases, masks, layer_y_min, layer_y_max)
+    figure;
+    img = squeeze(cases{i}(layer_y_min:layer_y_max,layer_x,:));
+    mask = squeeze(masks{i}(layer_y_min:layer_y_max,layer_x,:));
+    fused = imfuse(img, mask);
+    diffused = imdiffusefilt(fused);
+    imshow(diffused);
+
 end
+
+
+
 
 %To-Dos:
 
