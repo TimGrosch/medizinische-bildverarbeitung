@@ -1,8 +1,9 @@
-function show2DPlot(chosen_case, chosen_layer, cases_cell, masks_cell, y_min, y_max)
+function [img] = show2DPlot(V, mask, chosen_layer, y_min, y_max)
     figure;
-    img = squeeze(cases_cell{chosen_case}(y_min:y_max,chosen_layer,:));
-    mask = squeeze(masks_cell{chosen_case}(y_min:y_max,chosen_layer,:));
+    img = squeeze(V(y_min:y_max,chosen_layer,:));
+    imshow(img);
+    mask = squeeze(mask(y_min:y_max,chosen_layer,:));
     fused = imfuse(img, mask);
     diffused = imdiffusefilt(fused);
-    imshow(diffused);
+    %imshow(diffused);
 end

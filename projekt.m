@@ -13,7 +13,7 @@ layers_x = patientData.NiereMaximalBeiKoronalerSchicht_x_;
 layers_y_min = patientData.gew_hlteAxialeSchichten_z_;
 layers_y_max = patientData.Var11;
 % Ich habe die Datensätze limitiert, damit das Skript schneller läuft
-amountPatients = 1; %length(patientIDs);
+amountPatients = 5; %length(patientIDs);
 
 cases = cell(1,amountPatients);
 masks = cell(1,amountPatients);
@@ -36,14 +36,25 @@ for i = 1:amountPatients
 
     cases{i} = double(niftiread(finalPathImages));
     masks{i} = double(niftiread(finalPathMasks));
-   
-    %Function_show2DPlot(i, layer_x, cases, masks, layer_y_min, layer_y_max)
-    figure;
-    img = squeeze(cases{i}(layer_y_min:layer_y_max,layer_x,:));
-    mask = squeeze(masks{i}(layer_y_min:layer_y_max,layer_x,:));
-    fused = imfuse(img, mask);
-    diffused = imdiffusefilt(fused);
-    imshow(diffused);
+    
+    %Function_show2DPlot(cases{i}, masks{i}, layer_x, layer_y_min, layer_y_max)
+
+    data_row = patientData(i,:);
+    interpolated = interpolate_nifti_z(cases{i}, data_row);
+    img = Function_show2DPlot(interpolated, masks{i}, layer_x, layer_y_min, layer_y_max);
+
+
+    canny = edge(img,"canny");
+    %Canny Kantendetektion
+    figure();
+    subplot(2,2,1)
+    imshow(canny)
+    subplot(2,2,2)
+    sobel = edge(img,"sobel");
+    imshow(sobel)
+    subplot(2,2,3)
+    prewitt = edge(img,  "prewitt");
+    imshow(prewitt)
 
 end
 
