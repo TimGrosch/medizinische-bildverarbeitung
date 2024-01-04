@@ -4,9 +4,17 @@
 
 function [V] = interpolate_nifti_z(V,data)
 
+    V = V(data.gew_hlteAxialeSchichten_z_:data.Var11,:,:);
+
+    V = double(V);
+
     z = data.PixelDimensionen;
     x = data.Var6;
     y = data.Var7;
+
+    if z == 1
+        return
+    end
     
     z_grid = 0:z:size(V,1)*z-z;
     x_grid = 0:x:size(V,2)*x-x;
