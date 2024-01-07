@@ -14,8 +14,11 @@ prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
 
 %% Loading of example data
 
-% only valid for case 00003
-example_coronal_layer = 305
+% enter the case id without the zeroes
+Case_ID = 3
+
+% extracts the image and mask of the target case
+example_coronal_layer = get_data(Case_ID, XL_table)
 example_image = squeeze(V(:,example_coronal_layer,:));
 example_mask = squeeze(mask(:,example_coronal_layer,:));
 
@@ -28,13 +31,12 @@ display_segmented_images(example_image, example_mask);
 
 %% Edge Detection
 
-img = rescale(example_image(:,1:256));
-img = imgaussfilt(img,2);
+example_image = imgaussfilt(example_image,2);
 
 % three different edge detection algorithms
-sob = rescale(sobel_filter(img));
-gpb = rescale(gPb(img));
-can = rescale(ImprovedCanny(img,'rich'));
+sob = rescale(sobel_filter(example_image));
+gpb = rescale(gPb(example_image));
+can = rescale(ImprovedCanny(example_image,'rich'));
 
 figure
 subplot(3,1,1)
@@ -55,6 +57,12 @@ super_edge = bwareaopen(super_edge,50);
 
 figure;
 imshow(super_edge,[]);
+
+
+%% Localization
+
+% cutting the img to only analyze the left kidney
+img = rescale(example_image(:,1:256));
 
 
 
