@@ -4,6 +4,9 @@
 XL_table = readtable("patients_25.xlsx");
 XL_table = XL_table(strcmp(XL_table.DatensatzVerwenden, "Y"),:);
 
+
+%% extracting data
+
 % paths to save and load the data from
 Path_Cases = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Cases";
 Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Matrices";
@@ -15,10 +18,10 @@ prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
 %% Loading of example data
 
 % enter the case id without the zeroes
-Case_ID = 3
+Case_ID = 3;
 
 % extracts the image and mask of the target case
-example_coronal_layer = get_data(Case_ID, XL_table)
+example_coronal_layer = get_data(Case_ID, XL_table);
 example_image = squeeze(V(:,example_coronal_layer,:));
 example_mask = squeeze(mask(:,example_coronal_layer,:));
 
@@ -61,8 +64,18 @@ imshow(super_edge,[]);
 
 %% Localization
 
+% import of example reference
+example_reference = imread("KidneyCoronal_mod.png");
+
 % cutting the img to only analyze the left kidney
-img = rescale(example_image(:,1:256));
+left_side = rescale(super_edge(:,1:256));
+
+[target_marked,reference_marked,YBest,XBest,ang,scale,score] = find_object(left_side, example_reference);
+
+figure;
+imshow(target_marked);
+
+
 
 
 

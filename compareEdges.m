@@ -29,6 +29,7 @@ function[final_edge] = compareEdges(sob,gpb,can)
 
 % Display the final combined edge image
 figure;
+title("Combined Algorithms")
 imshow(final_edge,[]);
 
 end
