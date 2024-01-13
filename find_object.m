@@ -37,13 +37,19 @@ score = lowest_score; % initialize score as lowest_score
 % best match.
 % You can use the following variables: YBest, XBest, ang, scale, score
 
-%TODO zurück ändern (0:10:360)
-for rot = 0:1:10 % rotate image in 10° steps
+% rotate image from 0 to 350°
+% for rot = 0:10:350 % Not Filled
+for rot = 0:25:350  % Filled
 
     rot_reference = rotate_binary_edge_image(reference, rot);
+    rot_reference = clean_up(rot_reference);
 
-    for sca = 0.25:0.25:4 % scale image from 1/4 of original size to 4 times of the original size in 1/4 steps
+    % scale image from 1/4 of original size to 4 times of the original size in 1/4 steps
+    % for sca = 0.5:0.1:2     % Not Filled
+    for sca = 0.5:0.25:2      % Filled
         scaled_reference = imresize(rot_reference, sca);
+        scaled_reference = clean_up(scaled_reference);
+        scaled_reference = edge(scaled_reference,"canny");  % Not Filled
 
         ref = int64(size(scaled_reference)/2); % define reference point as middle point of the scaled and rotated reference
         refY = ref(1);
@@ -53,7 +59,7 @@ for rot = 0:1:10 % rotate image in 10° steps
 
         if score_ght > score % compare result to previuous results
             % save results and settings
-            score = score_ght
+            score = score_ght;
             YBest = y;
             XBest = x;
             ang = rot;
@@ -67,6 +73,7 @@ if score>lowest_score % if score of best match is good enough
     
     % rotate and scale reference according to best match
     result_ref = imresize(rotate_binary_edge_image(reference,ang), scale);
+    result_ref = clean_up(result_ref);%%%%%%%%%%%%%%ADDED
     ref = int64(size(result_ref)/2); % calculate reference point as in GHT
     refY = ref(1);
     refX = ref(2);
@@ -82,7 +89,7 @@ if score>lowest_score % if score of best match is good enough
     reference_marked = set2(reference_marked, [yy,xx], 1, YBest-refY, XBest-refX);
      
 else % if no match
-    disp('Error: No match founded');
+    disp('Error: No match found');
     % TODO: Which values will be returned if no match was found?
 end
 
