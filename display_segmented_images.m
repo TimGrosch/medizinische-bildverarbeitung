@@ -7,9 +7,9 @@ function [] = display_segmented_images(image,mask)
 %
 figure;
 subplot(2,1,1)
-imshow(image)
+imshow(image,[])
 subplot(2,1,2)
 image = imfuse(image,mask);
-imshow(image);
+imshow(image,[]);
 
 end
