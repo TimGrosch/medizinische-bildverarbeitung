@@ -1,30 +1,81 @@
+%% import of data
 
-%Constants
-PATHXCLTABLE = "C:\Users\Tim\Documents\MATLAB\patients_25.xlsx";
-PATHCASES = "C:\Users\Tim\Documents\MATLAB\Cases\case_";
+% preparing the table
+XL_table = readtable("patients_25.xlsx");
+XL_table = XL_table(strcmp(XL_table.DatensatzVerwenden, "Y"),:);
 
-%Read Data
-data = readtable(PATHXCLTABLE);
-patientData = data(strcmp(data.DatensatzVerwenden, "Y"),:);
-patientIDs = patientData.CaseID;
 
-cases = cell(1,length(patientIDs));
+%% extracting data
 
-for i = 1:length(patientIDs)
-    id = patientIDs(i,1);
-    id_str = string(id);
-    id_len = strlength(id_str);
-    adding_zeros = 5 - id_len;
+% paths to save and load the data from
+Path_Cases = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Cases";
+Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Matrices";
 
-    for n = 1:adding_zeros
-        id_str = append("0", id_str);
-    end
+% interpolates, cuts and saves all masks and volumes in the target path
+prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
 
-    finalPath = append(PATHCASES, id_str, "\imaging.nii.gz")
-    cases{i} = niftiread(finalPath);
 
-    %imfuse
-end
+%% Loading of example data
 
-test_Case = niftiread("Cases\case_00003\imaging.nii.gz");
+% enter the case id without the zeroes
+Case_ID = 3;
+
+% extracts the image and mask of the target case
+example_coronal_layer = get_data(Case_ID, XL_table);
+example_image = squeeze(V(:,example_coronal_layer,:));
+example_mask = squeeze(mask(:,example_coronal_layer,:));
+
+%% Visualisation
+
+% Visualisation of 1 layer of the image
+% and overlay of the mask over the image
+display_segmented_images(example_image, example_mask);
+
+
+%% Edge Detection
+
+example_image = imgaussfilt(example_image,2);
+
+% three different edge detection algorithms
+sob = rescale(sobel_filter(example_image));
+gpb = rescale(gPb(example_image));
+can = rescale(ImprovedCanny(example_image,'rich'));
+
+figure
+subplot(3,1,1)
+title('Sobel')
+imshow(sob,[])
+subplot(3,1,2)
+title('Canny')
+imshow(can,[])
+subplot(3,1,3)
+title('general Probability of Boundary')
+imshow(gpb,[])
+
+% for a solid edge detection, the three filter algorithms get combined
+super_edge = compareEdges(sob, gpb, can);
+
+% getting rid of artifacts and smaller edges
+super_edge = bwareaopen(super_edge,50);
+
+figure;
+imshow(super_edge,[]);
+
+
+%% Localization
+
+% import of example reference
+example_reference = imread("KidneyCoronal_mod.png");
+
+% cutting the img to only analyze the left kidney
+left_side = rescale(super_edge(:,1:256));
+
+[target_marked,reference_marked,YBest,XBest,ang,scale,score] = find_object(left_side, example_reference);
+
+figure;
+imshow(target_marked);
+
+
+
+
 

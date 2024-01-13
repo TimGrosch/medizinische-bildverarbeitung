@@ -3,7 +3,6 @@
 % data:         entry of the patient in the patienttable (one row)
 
 function [V] = interpolate_nifti_z(V,data)
-
     V = V(data.gew_hlteAxialeSchichten_z_:data.Var11,:,:);
 
     V = double(V);
