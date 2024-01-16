@@ -25,7 +25,7 @@ maxPoints = size(x,1); % number of points in the reference image
 
 if (maxPoints<1)
     disp('Error: Cannot determine shape of reference (no data points equal 1)');
-    quit();
+    % quit();
 end
 
 % --- Create gradient map of reference ------------------------------------
@@ -48,7 +48,7 @@ end
 maxPoints_tar = size(x,1);
 if (maxPoints_tar<1)
     disp('Error: Cannot determine edges of target (no data points equal 1)');
-    quit();
+    % quit();
 end
 
 % --- Create gradient map of target ---------------------------------------

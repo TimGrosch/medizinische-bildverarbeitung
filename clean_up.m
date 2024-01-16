@@ -6,6 +6,7 @@ function[img] = clean_up(img,size)
 
     %img = bwmorph(img,'fill');
     img = imclose(img,strel('disk',size));
-    img = bwareaopen(img,50);
+    %img = bwareaopen(img,50);
+    
 
 end
