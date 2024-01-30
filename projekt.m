@@ -8,8 +8,8 @@ XL_table = XL_table(strcmp(XL_table.DatensatzVerwenden, "Y"),:);
 %% extracting data
 
 % paths to save and load the data from
-Path_Cases = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Cases";
-Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Matrices";
+Path_Cases = "C:\Users\Tim\Documents\MATLAB\Cases";
+Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Matrices";
 
 % interpolates, cuts and saves all masks and volumes in the target path
 prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
@@ -18,12 +18,15 @@ prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
 %% Loading of example data
 
 % enter the case id without the zeroes
-Case_ID = 132;
-added_zeros = 5 - length(Case_ID);
+Case_ID = 59;
+added_zeros = 5 - length(num2str(Case_ID));
 path = append(string(Case_ID),'.mat');
 for i = 1:added_zeros
     path = append('0',path);
 end
+
+% loads the case
+load(append(Path_Matrices, "\", path));
 
 % extracts the image and mask of the target case
 example_coronal_layer = get_data(Case_ID, XL_table);
@@ -47,16 +50,16 @@ sob = rescale(sobel_filter(diff_image));
 gpb = rescale(gPb(diff_image));
 can = rescale(ImprovedCanny(diff_image,'rich'));
 
-% figure
-% subplot(3,1,1)
-% title('Sobel')
-% imshow(sob,[])
-% subplot(3,1,2)
-% title('Canny')
-% imshow(can,[])
-% subplot(3,1,3)
-% title('general Probability of Boundary')
-% imshow(gpb,[])
+figure
+subplot(3,1,1)
+title('Sobel')
+imshow(sob,[])
+subplot(3,1,2)
+title('Canny')
+imshow(can,[])
+subplot(3,1,3)
+title('general Probability of Boundary')
+imshow(gpb,[])
 
 % for a solid edge detection, the three filter algorithms get combined
 super_edge = compareEdges(sob, gpb, can);
@@ -92,6 +95,9 @@ figure;
 imshow(super_edge,[]);
 
 
+
+
+
 %% Localization
 
 % import of example reference
@@ -114,6 +120,9 @@ toc
 figure;
 imshow(target_marked);
 
+
+
+
 %% Chan-Vese segmentation of the Kidney
 
 kidney_seg = activecontour(example_image(:,257:end),reference_marked,'Chan-vese');
@@ -122,7 +131,33 @@ kidney_seg = activecontour(example_image(:,257:end),reference_marked,'Chan-vese'
 kidney_seg = bwareaopen(kidney_seg,1000);
 %%%%%
 kidney_seg = clean_up(kidney_seg,3);
+
 figure
 imshow(example_image(:,257:end),[])
 hold on
-visboundaries(kidney_seg,'Color','r'); 
+visboundaries(kidney_seg,'Color','r');
+
+
+%% Sorensen-Dice similarity coefficient for image segmentation
+
+cutted_mask = logical(example_mask(:,257:end));
+similarity_2D = dice(kidney_seg, cutted_mask);
+
+figure;
+subplot(3,1,1);
+title(['Mask']);
+imshow(cutted_mask);
+subplot(3,1,2);
+title(['Kidney']);
+imshow(kidney_seg);
+subplot(3,1,3);
+imshowpair(kidney_seg, cutted_mask);
+title(['Dice Index = ' num2str(similarity)]);
+
+
+% 
+% similarity = dice(target_marked, cutted_mask);
+% figure
+% imshowpair(target_marked, cutted_mask)
+%title(['Dice Index = ' num2str(similarity)])
+
