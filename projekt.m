@@ -8,8 +8,11 @@ XL_table = XL_table(strcmp(XL_table.DatensatzVerwenden, "Y"),:);
 %% extracting data
 
 % paths to save and load the data from
-Path_Cases = "C:\Users\Tim\Documents\MATLAB\Cases";
-Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Matrices";
+Path_Cases = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Cases";
+Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Matrices";
+% for laptop
+% Path_Cases = "C:\Users\Tim\Documents\MATLAB\Cases";
+% Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Matrices";
 
 % interpolates, cuts and saves all masks and volumes in the target path
 prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
@@ -18,7 +21,7 @@ prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
 %% Loading of example data
 
 % enter the case id without the zeroes
-Case_ID = 59;
+Case_ID = 33;
 added_zeros = 5 - length(num2str(Case_ID));
 path = append(string(Case_ID),'.mat');
 for i = 1:added_zeros
@@ -145,10 +148,10 @@ similarity_2D = dice(kidney_seg, cutted_mask);
 
 figure;
 subplot(3,1,1);
-title(['Mask']);
+title('Mask');
 imshow(cutted_mask);
 subplot(3,1,2);
-title(['Kidney']);
+title('Kidney');
 imshow(kidney_seg);
 subplot(3,1,3);
 imshowpair(kidney_seg, cutted_mask);
