@@ -20,7 +20,7 @@ prepare_all_patients(XL_table, Path_Cases, Path_Matrices);
 %% Loading of example data
 
 % enter the case id without the zeroes
-Case_ID = 91;
+Case_ID = 3;
 added_zeros = 5 - length(num2str(Case_ID));
 path = append(string(Case_ID),'.mat');
 for i = 1:added_zeros
@@ -31,9 +31,20 @@ end
 load(append(Path_Matrices, "\", path));
 
 % extracts the image and mask of the target case
-example_coronal_layer = get_data(Case_ID, XL_table);
+[example_coronal_layer, side_tumor] = get_data(Case_ID, XL_table);
 example_image = squeeze(V(:,example_coronal_layer,:));
 example_mask = squeeze(mask(:,example_coronal_layer,:));
+
+right = 1:256;
+left = 257:512;
+
+if side_tumor(1) == 'r'
+    side_cut = right;
+else
+    side_cut = left;
+end
+
+
 
 %% Visualisation
 
@@ -45,7 +56,7 @@ display_segmented_images(example_image, example_mask);
 %% Edge Detection
 
 diff_image = imgaussfilt(example_image,2);
-diff_image = diff_image(:,1:257);
+diff_image = diff_image(:,side_cut);
 
 % three different edge detection algorithms
 sob = rescale(sobel_filter(diff_image));
@@ -96,8 +107,8 @@ example_reference = rgb2gray(imread("KidneyCoronal.png"));
 %%%%%%%%%%% one fills up the edge of the kidney, the other does not
 %%%%%%%%%%% depending on which changes have to be made in find_object
 
-% img = imfill(rescale(super_edge(:,257:end)),'holes');   % Filled
-% img = rescale(super_edge(:,257:end));                 % Not filled
+% img = imfill(rescale(super_edge(:,side_cut)),'holes');   % Filled
+% img = rescale(super_edge(:,side_cut));                 % Not filled
 img = imfill(rescale(super_edge),'holes');
 
 tic
@@ -112,7 +123,7 @@ imshow(target_marked);
 
 %% Chan-Vese segmentation of the Kidney
 
-kidney_seg = activecontour(example_image(:,1:257),reference_marked,'Chan-vese');
+kidney_seg = activecontour(example_image(:,side_cut),reference_marked,'Chan-vese');
 %%%%%
 % delete every form except for largest
 kidney_seg = bwareaopen(kidney_seg,1000);
@@ -120,13 +131,13 @@ kidney_seg = bwareaopen(kidney_seg,1000);
 kidney_seg = clean_up(kidney_seg,3);
 
 figure
-imshow(example_image(:,1:257),[])
+imshow(example_image(:,side_cut),[])
 hold on
 visboundaries(kidney_seg,'Color','r');
 
 %% Sorensen-Dice similarity coefficient for image segmentation
 
-cutted_mask = logical(example_mask(:,1:257));
+cutted_mask = logical(example_mask(:,side_cut));
 similarity_2D = dice(kidney_seg, cutted_mask);
 
 figure;
@@ -155,7 +166,7 @@ for n = 100:400
 
     tumor_image = squeeze(V(:,n,:));
     tumor_mask = squeeze(mask(:,n,:));
-    cutted_tumor_image = tumor_image(:,1:257);
+    cutted_tumor_image = tumor_image(:,side_cut);
     cutted_tumor_image(kidney_seg == 0) = 0;
     
     
@@ -199,7 +210,7 @@ imshow(tumor_marked);
 %% Tumor detection
 
 % for case 3
-chosen_slice = 200
+chosen_slice = 270;
 kmeans = 5;
 
 % import of example tumor reference
@@ -208,7 +219,7 @@ example_tumor_reference = rgb2gray(imread("Circle.png"));
 % cuts and filters one side of the image
 tumor_image = squeeze(V(:,chosen_slice,:));
 tumor_mask = squeeze(mask(:,chosen_slice,:));
-cutted_tumor_image = tumor_image(:,1:257);
+cutted_tumor_image = tumor_image(:,side_cut);
 cutted_tumor_image = imgaussfilt(cutted_tumor_image,2);
 
 display_segmented_images(tumor_image, tumor_mask);
@@ -258,7 +269,7 @@ super_tumor_edge(super_tumor_edge > 0) = 1;
 super_tumor_edge = bwmorph(super_tumor_edge,"thin",inf);
 
 % Metric
-metric = nnz(imfill(super_tumor_edge,"holes"))/nnz(super_tumor_edge)
+metric = nnz(imfill(super_tumor_edge,"holes"))/nnz(super_tumor_edge);
 if metric > 2.5
     super_tumor_edge = bwareaopen(super_tumor_edge,50);
 else
@@ -285,7 +296,7 @@ title('super')
 
 %%
 
-img = imfill(rescale(sob),'holes');
+img = imfill(rescale(super_tumor_edge),'holes');
 
 [target_marked,reference_marked,Y_Best,X_Best,ang,scale,score] = find_object(img, example_tumor_reference);
 
