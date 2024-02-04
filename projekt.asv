@@ -170,7 +170,7 @@ subplot(3,1,3);
 imshowpair(kidney_seg, cutted_mask);
 title(['Dice Index = ' num2str(similarity_2D)]);
 
-%% SKIP (Tumor detection (loop))
+%% Tumor detection (loop)
 
 % import of example tumor reference
 
@@ -234,7 +234,7 @@ generated_mask_right = expansion_volume(kidney_seg,example_coronal_layer,V,'righ
 
 % for case 3
 chosen_slice = 270;
-kmeans = 4;
+kmeans = 3;
 
 % import of example tumor reference
 example_tumor_reference = rgb2gray(imread("Circle.png"));
@@ -277,7 +277,7 @@ imshow(tumor_focused,[])
 subplot(2,1,2)
 imshow(pre_segmented,[])
 
-%%  SKIP
+%% 
 % Threshold the image
 threshold = 1; % Adjust this threshold as needed
 binary__kmeans = pre_segmented <= threshold;
@@ -295,6 +295,9 @@ super_tumor_edge = compareEdges(sob, gpb, can);
 super_tumor_edge(super_tumor_edge > 0) = 1;
 super_tumor_edge = bwmorph(super_tumor_edge,"thin",inf);
 
+% Metric
+% metric = nnz(imfill(super_tumor_edge,"holes"))/nnz(super_tumor_edge);
+
 super_tumor_edge = bwareaopen(super_tumor_edge,50);
 
 
@@ -303,6 +306,23 @@ close all
 super_tumor_edge = bwmorph(super_tumor_edge,'close');
 super_tumor_edge = bwmorph(super_tumor_edge,'thin',inf);
 super_tumor_edge = bwareaopen(super_tumor_edge,20);
+% super_tumor_edge = connect_edges(super_tumor_edge,15);
+
+% counter = 0;
+% done = false;
+% 
+% while ~done
+%     counter =+ 1;
+%     points = bwmorph(super_tumor_edge,'endpoints');
+%     if max(max(points)) == 0
+%         done = true;
+%     else
+%         super_tumor_edge = super_tumor_edge-points;
+%     end
+% 
+% end
+
+
 
 figure;
 subplot(2,2,1)
@@ -320,7 +340,7 @@ title('super')
 
 clear sob can gpb 
 
-%% SKIP
+%%
 
 img = imfill(rescale(super_tumor_edge),'holes');
 %img = super_tumor_edge;
@@ -331,7 +351,7 @@ img = imfill(rescale(super_tumor_edge),'holes');
 figure;
 imshow(target_marked_t);
 
-%% SKIP
+%%
 target_marked_t = zeros(size(tumor_image(:,side_cut)));
 reference_marked_t( ~any(reference_marked_t,2), : ) = [];  %rows
 reference_marked_t( :, ~any(reference_marked_t,1) ) = [];  %columns
@@ -340,7 +360,7 @@ reference_marked_t( :, ~any(reference_marked_t,1) ) = [];  %columns
 
 target_marked_t(area_t(1, 1):area_t(2, 1)-1, area_t(1, 2):area_t(2, 2)-1) = reference_marked_t;
 
-%% SKIP
+%%
 tumor_seg = activecontour(tumor_image(:,side_cut),target_marked_t,'edge','SmoothFactor',0.8,'ContractionBias',-0.3);
 %tumor_seg = activecontour(tumor_image(:,side_cut),target_marked_t,'edge');
 
@@ -351,7 +371,7 @@ visboundaries(tumor_seg,'Color','r');
 visboundaries(target_marked_t,'Color','b');
 
 
-%% Idea of segmenting by kmeans and kicking the tissue of kidney
+%%
 
 imshow(pre_segmented,[])
 binary_masks_tumor = zeros([136,3,111]);
@@ -371,53 +391,17 @@ cor_coef(cor_coef(:,1) == to_delete,:) = [];
 binary_masks_tumor = binary_masks_tumor(:,cor_coef(:,1),:);
 
 
-%% Localization of the tumor
+%%
 
-% in this case the score matches the desired output but needs to be adjust
-% if more cases need higher robustness
-close all
-example_tumor_reference = edge(imresize(rgb2gray(imread("Circle.png")),0.5),'sobel');
-bestscore = 0;
-for i = 1:3
-    edge_for_bin = edge(squeeze(binary_masks_tumor(:,i,:)),"sobel");
-    [ttm,trm,tY,tX,tang,tscale,tscore] = find_object(edge_for_bin, example_tumor_reference);
-    if tscore > bestscore
-        reference_marked_t = trm;
-    end
-    figure
-    imshow(ttm,[])
-    tscore
-end
-
-reference_marked_t = imfill(reference_marked_t,'holes');
-
-%% Putting the mask in the same size as the original image again,
-% (It has been cut to the area around the kidney)
-
-target_marked_t = zeros(size(tumor_image(:,side_cut)));
-reference_marked_t( ~any(reference_marked_t,2), : ) = [];  %rows
-reference_marked_t( :, ~any(reference_marked_t,1) ) = [];  %columns
-
-[cut, area_t] = get_area(Y_Best_t+area_tumor(1,1),X_Best_t+area_tumor(1,2),reference_marked_t,tumor_image(:,side_cut),1);
-
-target_marked_t(area_t(1, 1):area_t(2, 1)-1, area_t(1, 2):area_t(2, 2)-1) = reference_marked_t;
-
-%% Segmentation of the kidney 
-tumor_seg = activecontour(tumor_image(:,side_cut),target_marked_t,'edge','SmoothFactor',0.8,'ContractionBias',-0.3);
-%tumor_seg = activecontour(tumor_image(:,side_cut),target_marked_t,'edge');
-
+for i = 1:2
+    edge_for_bin = rescale(squeeze(binary_masks_tumor(:,i,:)),[0 255]);
+[ttm,trm,tY,tX,tang,tscale,tscore] = find_object(edge_for_bin, example_tumor_reference);
 figure
-imshow(tumor_image(:,side_cut),[])
-hold on
-visboundaries(tumor_seg,'Color','r');
-visboundaries(target_marked_t,'Color','b');
-
-
-%% 3D expansion of tumor
+imshow(ttm,[])
+tscore
+end
+%%
 % 257 - 289
-
-% TODO: Cutoffs don't work, better one to find or arbitrary for-loop
-
 generated_mask_right_tumor = zeros(size(generated_mask_right));
 current_slice = chosen_slice;
 new_seg = tumor_seg;
@@ -461,44 +445,19 @@ while true
     hold off
 end
 
-current_slice = chosen_slice;
+%%
+
+current_slice = chosen_slice-1;
 new_seg = tumor_seg;
-scale_ref = 1;
 
-while true
-    current_slice = current_slice + 1;
-    tic
-    [tm,rm,Y_tumor,X_tumor,ant,sct,scot] = find_object(new_seg, example_tumor_reference);
-    
-    rm = imresize(rm,scale_ref);
-    rm( ~any(rm,2), : ) = [];  %rows
-    rm( :, ~any(rm,1) ) = [];  %columns
-    
-    tm = zeros(size(tm));
-    [cut, area_t] = get_area(Y_tumor,X_tumor,rm,tm,1);
-    
-    tm(area_t(1, 1):area_t(2, 1)-1, area_t(1, 2):area_t(2, 2)-1) = rm;
+tic
+[tm,rm,Y_tumor,X_tumor,ant,sct,scot] = find_object(new_seg, example_tumor_reference);
 
-    inbetween = activecontour(squeeze(V(:,current_slice,side_cut)),tm,'edge','SmoothFactor',0.8,'ContractionBias',0);
-    toc
-    % if scale_ref > 1 && nnz(inbetween) < nnz(new_seg)*0.85
-    %     scale_ref = scale_ref * 0.95;
-    % end
-    if nnz(inbetween) > 2*nnz(new_seg)
-        fprintf('Tumor stops at slice: %d\n',current_slice)
-        break;
-    elseif nnz(inbetween) == 0
-        fprintf('Tumor stops at slice: %d\n',current_slice)
-        break;
-    else
-        new_seg = inbetween;
-        generated_mask_right_tumor(:,current_slice,:) = new_seg;
-    end
+rm = imresize(rm,1.75);
+rm( ~any(rm,2), : ) = [];  %rows
+rm( :, ~any(rm,1) ) = [];  %columns
 
-    close all
-    imshow(squeeze(V(:,current_slice,side_cut)),[])
-    hold on
-    visboundaries(new_seg,'Color','r');
-    visboundaries(tm,'Color','b')
-    hold off
-end
+tm = zeros(size(tm));
+[cut, area_t] = get_area(Y_tumor,X_tumor,rm,tm,1);
+
+tm(area_t(1, 1):area_t(2, 1)-1, area_t(1, 2):area_t(2, 2)-1) = rm;

@@ -4,15 +4,14 @@
 XL_table = readtable("patients_25.xlsx");
 XL_table = XL_table(strcmp(XL_table.DatensatzVerwenden, "Y"),:);
 
-similarity_table = table(Case_ID,similarity_2D)
+similarity_table = table(Case_ID,similarity_2D);
 
 %%
 IDs = XL_table.CaseID;
-num_cases = 5;
 
 % paths to save and load the data from
-Path_Cases = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Cases";
-Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Matrices";
+%Path_Cases = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Cases";
+%Path_Matrices = "C:\Users\Tim\Documents\MATLAB\Medizinische Bildverarbeitung\Matrices";
 
 for i = 1:25
 
@@ -29,7 +28,7 @@ for i = 1:25
     end
     
     % loads the case
-    load(append(Path_Matrices, "\", path));
+    load(path);
     
     % extracts the image and mask of the target case
     example_coronal_layer = get_data(Case_ID, XL_table);
@@ -58,9 +57,10 @@ for i = 1:25
     if metric > 2.5
         super_edge = bwareaopen(super_edge,50);
     else
-        super_edge = clean_up(super_edge);
-        super_edge = bwareaopen(super_edge,50);
-        super_edge = bwmorph(super_edge,"thin",inf);
+        % super_edge = clean_up(super_edge);
+        % super_edge = bwareaopen(super_edge,50);
+        % super_edge = bwmorph(super_edge,"thin",inf);
+        super_edge = connect_edges(super_edge,5);
     end
     
     % Localization
@@ -77,10 +77,24 @@ for i = 1:25
     toc
 
     % Chan-Vese segmentation of the Kidney
-    
-    kidney_seg = activecontour(example_image(:,257:end),reference_marked,'Chan-vese');
-    kidney_seg = bwareaopen(kidney_seg,1000);
-    kidney_seg = clean_up(kidney_seg,3);
+    try
+        kidney_seg = activecontour(example_image(:,257:end),reference_marked,'Chan-vese');
+    catch
+        disp(size(example_image(:,257:end)))
+        disp(size(reference_marked))
+    end
+
+    max_size = 0;
+    list_objects = bwconncomp(kidney_seg);
+    list_objects = list_objects.PixelIdxList;
+    for j = 1:length(list_objects)
+        arr = list_objects(j);
+        curr = length(arr{1});
+        if curr > max_size
+            max_size = curr;
+        end
+    end
+    kidney_seg = bwareaopen(kidney_seg, max_size-1);
     
     figure
     imshow(example_image(:,257:end),[])
@@ -105,11 +119,11 @@ for i = 1:25
 
     cell = {ID, similarity_2D};
     similarity_table = [similarity_table;cell];
-
-
+    close all
 
 end
 
+%%
 filename = 'similarty_table.xlsx';
 writetable(similarity_table,filename,'Sheet','MyNewSheet','WriteVariableNames',false);
 
