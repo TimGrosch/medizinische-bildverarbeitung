@@ -7,22 +7,13 @@ function [gPb_response] = gPb(img)
 grad_mag = sqrt(Gx.^2 + Gy.^2);
 grad_orient = atan2(Gy, Gx);
 
-% Compute gPb response using oriented filters (e.g., Gabor filters)
+% Compute gPb response using oriented filters
 gPb_response = compute_gPb(grad_mag, grad_orient); % Function to compute gPb
 
 % Normalize gPb response to [0, 1] for visualization purposes
 gPb_response = (gPb_response - min(gPb_response(:))) / (max(gPb_response(:)) - min(gPb_response(:)));
 
 end
-% Display original image and gPb response
-% figure;
-% subplot(2, 1, 1);
-% imshow(img);
-% title('Original Image');
-% 
-% subplot(2, 1, 2);
-% imshow(gPb_response);
-% title('gPb Response');
 
 % ucm_map = contours2ucm(gPb_response, 'imageSize'); % Use appropriate function for hierarchical segmentation
 % 
