@@ -1,10 +1,6 @@
 function[new_mask] = expansion_volume(seg,starting_slice,V,side,method,smooth)
 
-if strcmp(side,'left')
-    V = V(:,:,257:end);
-else
-    V = V(:,:,1:256);
-end
+V = V(:,:,side);
 
 if ~exist('method','var')
     method = 'Chan-vese';
