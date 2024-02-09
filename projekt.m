@@ -33,7 +33,7 @@ load(path);
 
 % extracts the image and mask of the target case
 [example_coronal_layer, side_tumor] = get_data(Case_ID, XL_table);
-side_tumor = 'links';
+%side_tumor = 'links';
 example_image = squeeze(V(:,example_coronal_layer,:));
 example_mask = squeeze(mask(:,example_coronal_layer,:));
 
@@ -108,14 +108,6 @@ clear diff_image gpb sob can metric
 % import of example reference
 example_reference = rgb2gray(imread("KidneyCoronal.png"));
 
-% cutting the img to only analyze the left kidney
-
-%%%%%%%%%%% Choose which to use
-%%%%%%%%%%% one fills up the edge of the kidney, the other does not
-%%%%%%%%%%% depending on which changes have to be made in find_object
-
-% img = imfill(rescale(super_edge(:,side_cut)),'holes');   % Filled
-% img = rescale(super_edge(:,side_cut));                 % Not filled
 img = imfill(rescale(super_edge),'holes');
 
 tic
